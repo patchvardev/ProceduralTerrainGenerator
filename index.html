@@ -52,7 +52,7 @@
         button {
             width: 100%;
             padding: 10px;
-            background: #5b8dd9; /* CHANGED */
+            background: #5b8dd9;
             color: white;
             border: none;
             border-radius: 4px;
@@ -62,7 +62,7 @@
             margin-top: 10px;
         }
         button:hover {
-            background: #4a7ac8; /* CHANGED */
+            background: #4a7ac8;
         }
         #info {
             position: absolute;
@@ -245,8 +245,8 @@
         function init() {
             // Scene
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xd4956a); // CHANGED
-            scene.fog = new THREE.Fog(0xd4956a, 50, 300); // CHANGED
+            scene.background = new THREE.Color(0xd4956a);
+            scene.fog = new THREE.Fog(0xd4956a, 50, 300);
             
             // Camera
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -263,12 +263,12 @@
             const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
             scene.add(ambientLight);
             
-            const directionalLight = new THREE.DirectionalLight(0xffb347, 0.8); // CHANGED
+            const directionalLight = new THREE.DirectionalLight(0xffb347, 0.8);
             directionalLight.position.set(50, 100, 50);
             directionalLight.castShadow = true;
             scene.add(directionalLight);
             
-            const directionalLight2 = new THREE.DirectionalLight(0xc8a8d8, 0.3); // CHANGED
+            const directionalLight2 = new THREE.DirectionalLight(0xc8a8d8, 0.3);
             directionalLight2.position.set(-50, 50, -50);
             scene.add(directionalLight2);
             
@@ -327,13 +327,13 @@
                 const color = new THREE.Color();
                 
                 if (height < 2) {
-                    color.setHex(0xC2A96E); // CHANGED
+                    color.setHex(0xC2A96E); // Brown (low)
                 } else if (height < 8) {
-                    color.setHex(0x3A6E2A); // CHANGED
+                    color.setHex(0x3A6E2A); // Forest green
                 } else if (height < 15) {
-                    color.setHex(0x7A6552); // CHANGED
+                    color.setHex(0x7A6552); // Light green
                 } else {
-                    color.setHex(0xEEE8DC); // CHANGED
+                    color.setHex(0xEEE8DC); // White (peaks)
                 }
                 
                 colors.push(color.r, color.g, color.b);
@@ -481,10 +481,16 @@
             const now = audioContext.currentTime;
             const duration = audioParams.duration;
             
+            // Map terrain parameters to audio synthesis
+            // Use the same noise generator to create frequency modulation
+            
+            // Main oscillator - frequency determined by base frequency
             const mainOsc = audioContext.createOscillator();
             mainOsc.type = 'sine';
             mainOsc.frequency.setValueAtTime(audioParams.baseFreq, now);
             
+            // Create frequency modulation using noise parameters
+            // Sample noise values over time to create evolving timbre
             const samplePoints = 100;
             const timeStep = duration / samplePoints;
             
@@ -492,6 +498,7 @@
                 const t = now + (i * timeStep);
                 const noiseX = i / params.scale;
                 
+                // Use the terrain's noise to modulate frequency
                 const noiseValue = noiseGenerator.octaveNoise(
                     noiseX,
                     0,
@@ -500,6 +507,7 @@
                     params.lacunarity
                 );
                 
+                // Map noise (-1 to 1) to frequency deviation
                 const freqDeviation = noiseValue * audioParams.baseFreq * 0.5;
                 mainOsc.frequency.linearRampToValueAtTime(
                     audioParams.baseFreq + freqDeviation,
@@ -507,6 +515,7 @@
                 );
             }
             
+            // Create harmonic content based on octaves
             const harmonicOscs = [];
             for (let i = 1; i <= Math.min(params.octaves, 4); i++) {
                 const harmOsc = audioContext.createOscillator();
@@ -518,11 +527,13 @@
                     now
                 );
                 
+                // Harmonic frequencies
                 harmOsc.frequency.setValueAtTime(
                     audioParams.baseFreq * Math.pow(params.lacunarity, i),
                     now
                 );
                 
+                // Modulate harmonics with noise
                 for (let j = 0; j < samplePoints; j++) {
                     const t = now + (j * timeStep);
                     const noiseX = j / (params.scale / Math.pow(params.lacunarity, i));
@@ -541,24 +552,29 @@
                 audioNodes.push(harmOsc, harmGain);
             }
             
+            // Master gain with envelope
             const masterGain = audioContext.createGain();
             masterGain.gain.setValueAtTime(0, now);
-            masterGain.gain.linearRampToValueAtTime(0.3, now + 0.1);
-            masterGain.gain.linearRampToValueAtTime(0.2, now + 0.3);
-            masterGain.gain.setValueAtTime(0.2, now + duration - 0.5);
-            masterGain.gain.linearRampToValueAtTime(0, now + duration);
+            masterGain.gain.linearRampToValueAtTime(0.3, now + 0.1); // Attack
+            masterGain.gain.linearRampToValueAtTime(0.2, now + 0.3); // Decay
+            masterGain.gain.setValueAtTime(0.2, now + duration - 0.5); // Sustain
+            masterGain.gain.linearRampToValueAtTime(0, now + duration); // Release
             
+            // Filter to shape the tone
             const filter = audioContext.createBiquadFilter();
             filter.type = 'lowpass';
             filter.frequency.setValueAtTime(1000, now);
             
+            // Modulate filter with amplitude parameter
             filter.frequency.linearRampToValueAtTime(
                 500 + (params.amplitude * 50),
                 now + duration
             );
             
+            // Connect main oscillator
             mainOsc.connect(filter);
             
+            // Connect harmonics
             harmonicOscs.forEach(({ osc, gain }) => {
                 gain.connect(filter);
             });
@@ -566,19 +582,23 @@
             filter.connect(masterGain);
             masterGain.connect(audioContext.destination);
             
+            // Start all oscillators
             mainOsc.start(now);
             harmonicOscs.forEach(({ osc }) => osc.start(now));
             
+            // Stop all after duration
             mainOsc.stop(now + duration);
             harmonicOscs.forEach(({ osc }) => osc.stop(now + duration));
             
             audioNodes.push(mainOsc, filter, masterGain);
             
+            // Reset playing state after duration
             setTimeout(() => {
                 isPlaying = false;
             }, duration * 1000);
         }
         
+        // Audio UI setup
         document.getElementById('duration').addEventListener('input', (e) => {
             audioParams.duration = parseFloat(e.target.value);
             document.getElementById('duration-value').textContent = audioParams.duration;
