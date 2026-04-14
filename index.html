@@ -52,7 +52,7 @@
         button {
             width: 100%;
             padding: 10px;
-            background: #4CAF50;
+            background: #5b8dd9; /* CHANGED */
             color: white;
             border: none;
             border-radius: 4px;
@@ -62,7 +62,7 @@
             margin-top: 10px;
         }
         button:hover {
-            background: #45a049;
+            background: #4a7ac8; /* CHANGED */
         }
         #info {
             position: absolute;
@@ -245,8 +245,8 @@
         function init() {
             // Scene
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xd4956a); // CHANGED: warm golden sky
-            scene.fog = new THREE.Fog(0xd4956a, 50, 300); // CHANGED: fog matches sky
+            scene.background = new THREE.Color(0xd4956a); // CHANGED
+            scene.fog = new THREE.Fog(0xd4956a, 50, 300); // CHANGED
             
             // Camera
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -263,12 +263,12 @@
             const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
             scene.add(ambientLight);
             
-            const directionalLight = new THREE.DirectionalLight(0xffb347, 0.8); // CHANGED: warm orange light
+            const directionalLight = new THREE.DirectionalLight(0xffb347, 0.8); // CHANGED
             directionalLight.position.set(50, 100, 50);
             directionalLight.castShadow = true;
             scene.add(directionalLight);
             
-            const directionalLight2 = new THREE.DirectionalLight(0xc8a8d8, 0.3); // CHANGED: lavender fill
+            const directionalLight2 = new THREE.DirectionalLight(0xc8a8d8, 0.3); // CHANGED
             directionalLight2.position.set(-50, 50, -50);
             scene.add(directionalLight2);
             
@@ -327,13 +327,13 @@
                 const color = new THREE.Color();
                 
                 if (height < 2) {
-                    color.setHex(0xC2A96E); // CHANGED: sandy beach
+                    color.setHex(0xC2A96E); // CHANGED
                 } else if (height < 8) {
-                    color.setHex(0x3A6E2A); // CHANGED: deep forest green
+                    color.setHex(0x3A6E2A); // CHANGED
                 } else if (height < 15) {
-                    color.setHex(0x7A6552); // CHANGED: rocky brown
+                    color.setHex(0x7A6552); // CHANGED
                 } else {
-                    color.setHex(0xEEE8DC); // CHANGED: warm off-white peaks
+                    color.setHex(0xEEE8DC); // CHANGED
                 }
                 
                 colors.push(color.r, color.g, color.b);
